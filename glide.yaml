@@ -1,0 +1,3 @@
+package: github.com/justuswilhelm/anonymijson
+import:
+- package: github.com/justuswilhelm/babble

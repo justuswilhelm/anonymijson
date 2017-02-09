@@ -2,29 +2,38 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
+	"github.com/justuswilhelm/babble"
 	"log"
 	"math/rand"
 	"os"
 	"reflect"
 )
 
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+// Config stores flags
+type Config struct {
+	InPlace bool
+	files   []string
+}
 
-func randStringRunes(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
+var (
+	babbler = babble.NewBabbler()
+	config  = Config{}
+)
+
+func init() {
+	flag.BoolVar(&config.InPlace, "i", false, "Perform in-place")
+	flag.Parse()
+	config.files = flag.Args()
 }
 
 func anonymize(value interface{}) (interface{}, error) {
 	switch val := (value).(type) {
 	case float64:
-		return rand.ExpFloat64(), nil
+		return rand.Float64(), nil
 	case string:
-		return randStringRunes(16), nil
+		return babbler.Babble(), nil
 	case map[string]interface{}:
 		newObj := make(map[string]interface{})
 		for k, v := range val {
@@ -51,18 +60,59 @@ func anonymize(value interface{}) (interface{}, error) {
 	}
 }
 
-func main() {
-	var val interface{}
-	d := json.NewDecoder(os.Stdin)
-	if err := d.Decode(&val); err != nil {
-		log.Fatal(err)
-	}
-	val, err := anonymize(val)
-	if err != nil {
-		log.Fatal(err)
-	}
+func outputStdout(path string, value *interface{}) error {
+	fmt.Printf("=== %s ===\n", path)
 	e := json.NewEncoder(os.Stdout)
-	if err := e.Encode(val); err != nil {
-		log.Fatal(err)
+	e.SetIndent("", "  ")
+	if err := e.Encode(value); err != nil {
+		return err
+	}
+	fmt.Print("\n")
+	return nil
+}
+
+func outputInplace(path string, value *interface{}) error {
+	fd, err := os.Create(path)
+	defer fd.Close()
+
+	if err != nil {
+		return err
+	}
+	e := json.NewEncoder(fd)
+	if err := e.Encode(value); err != nil {
+		return err
+	}
+	return nil
+}
+
+func convert(path string) error {
+	var val interface{}
+	fd, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	d := json.NewDecoder(fd)
+	if err := d.Decode(&val); err != nil {
+		return err
+	}
+	val, err = anonymize(val)
+	if err != nil {
+		return err
+	}
+
+	if config.InPlace {
+		outputInplace(path, &val)
+	} else {
+		outputStdout(path, &val)
+	}
+	return nil
+}
+
+func main() {
+	for _, path := range config.files {
+		err := convert(path)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }

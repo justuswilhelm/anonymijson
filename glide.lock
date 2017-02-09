@@ -1,0 +1,6 @@
+hash: cd322ea0fbb1f1ce005b7cc0acc63404d250e127864884febe4bd63380311758
+updated: 2017-02-09T11:07:47.475232897+01:00
+imports:
+- name: github.com/justuswilhelm/babble
+  version: a3b36c9c554eaff864e74ca94e266a997b938db2
+testImports: []
