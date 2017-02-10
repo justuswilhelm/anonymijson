@@ -61,13 +61,13 @@ func anonymize(value interface{}) (interface{}, error) {
 }
 
 func outputStdout(path string, value *interface{}) error {
-	fmt.Printf("=== %s ===\n", path)
+	log.Printf("=== %s ===\n", path)
 	e := json.NewEncoder(os.Stdout)
 	e.SetIndent("", "  ")
 	if err := e.Encode(value); err != nil {
 		return err
 	}
-	fmt.Print("\n")
+	log.Printf("\n")
 	return nil
 }
 
