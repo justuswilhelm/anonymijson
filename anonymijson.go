@@ -30,6 +30,10 @@ func init() {
 
 func anonymize(value interface{}) (interface{}, error) {
 	switch val := (value).(type) {
+	case nil:
+		return nil, nil
+	case bool:
+		return val, nil
 	case float64:
 		return rand.Float64(), nil
 	case string:
