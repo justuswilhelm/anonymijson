@@ -33,7 +33,7 @@ func anonymize(value interface{}) (interface{}, error) {
 	case nil:
 		return nil, nil
 	case bool:
-		return val, nil
+		return rand.Intn(2) != 0, nil
 	case float64:
 		return rand.Float64(), nil
 	case string:
